@@ -1,0 +1,10 @@
+name: tasks-hermes
+version: "0.1.0"
+description: "Simple JSON-backed Hermes tasks with one note per task."
+provides_tools:
+  - tasks_create
+  - tasks_list
+  - tasks_update
+  - tasks_note
+  - tasks_complete
+  - tasks_delete
