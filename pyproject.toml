@@ -22,9 +22,9 @@ classifiers = [
 dependencies = []
 
 [project.urls]
-Homepage = "https://github.com/imadal1n/tasks-hermes"
-Issues = "https://github.com/imadal1n/tasks-hermes/issues"
-Source = "https://github.com/imadal1n/tasks-hermes"
+Homepage = "https://github.com/Miller-Family-Projects/tasks-hermes"
+Issues = "https://github.com/Miller-Family-Projects/tasks-hermes/issues"
+Source = "https://github.com/Miller-Family-Projects/tasks-hermes"
 
 [dependency-groups]
 dev = [
