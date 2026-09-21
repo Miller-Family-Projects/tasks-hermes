@@ -1,5 +1,5 @@
 name: tasks-hermes
-version: "0.1.0"
+version: "0.2.0"
 description: "Simple JSON-backed Hermes tasks with one note per task."
 provides_tools:
   - tasks_create

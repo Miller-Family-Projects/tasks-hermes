@@ -60,16 +60,33 @@ Returns:
 Arguments:
 
 ```json
-{ "status": "all" }
+{ "status": "pending", "query": "agent executor", "limit": 10 }
 ```
 
 `status` is optional and defaults to `all`. Accepted values are `pending`,
-`in_progress`, `done`, and `all`.
+`in_progress`, `done`, and `all`. Results are compact and bounded by default:
+
+- notes are omitted unless `include_notes` is explicitly `true`;
+- `limit` defaults to 20 and cannot exceed 100;
+- `offset` provides pagination;
+- `id` selects an exact task;
+- `query` searches task id, title, and note without emitting the note.
+
+Use `include_notes: true` only when the note content is required, preferably
+together with an exact `id` or a narrow query.
 
 Returns:
 
 ```json
-{ "ok": true, "tasks": [] }
+{
+  "ok": true,
+  "tasks": [],
+  "count": 0,
+  "total": 0,
+  "offset": 0,
+  "limit": 20,
+  "has_more": false
+}
 ```
 
 ### `tasks_update`

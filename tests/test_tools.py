@@ -76,6 +76,88 @@ def test_tasks_list_filters_by_status(tmp_path: Path) -> None:
     assert [task["id"] for task in tasks] == [json_string(pending["id"])]
 
 
+def test_tasks_list_is_compact_and_bounded_by_default(tmp_path: Path) -> None:
+    # Given: more tasks than the default page size, each with a large note.
+    path = tmp_path / "tasks.json"
+    for index in range(25):
+        _ = tasks_create(
+            {"title": f"Task {index}", "note": f"note-{index}-" + ("x" * 2_000)},
+            _tasks_path=str(path),
+        )
+
+    # When: tasks are listed without requesting notes or pagination.
+    payload = parse_result(tasks_list({}, _tasks_path=str(path)))
+
+    # Then: the response is bounded and notes are omitted.
+    tasks = [json_object(task) for task in json_list(payload["tasks"])]
+    assert payload["count"] == 20
+    assert payload["total"] == 25
+    assert payload["has_more"] is True
+    assert payload["limit"] == 20
+    assert len(tasks) == 20
+    assert all("note" not in task for task in tasks)
+
+
+def test_tasks_list_searches_notes_without_emitting_them(tmp_path: Path) -> None:
+    # Given: one task whose note contains the search term.
+    path = tmp_path / "tasks.json"
+    matching = json_object(
+        parse_result(
+            tasks_create(
+                {"title": "Architecture study", "note": "contains-needle-but-is-private"},
+                _tasks_path=str(path),
+            )
+        )["task"]
+    )
+    _ = tasks_create({"title": "Other", "note": "unrelated"}, _tasks_path=str(path))
+
+    # When: list is filtered by a query found only in the note.
+    payload = parse_result(tasks_list({"query": "needle"}, _tasks_path=str(path)))
+
+    # Then: only compact task metadata is returned.
+    tasks = [json_object(task) for task in json_list(payload["tasks"])]
+    assert payload["total"] == 1
+    assert [task["id"] for task in tasks] == [matching["id"]]
+    assert "note" not in tasks[0]
+
+
+def test_tasks_list_exact_id_can_explicitly_include_note(tmp_path: Path) -> None:
+    # Given: a task with a note.
+    path = tmp_path / "tasks.json"
+    created = json_object(
+        parse_result(
+            tasks_create({"title": "Target", "note": "full detail"}, _tasks_path=str(path))
+        )["task"]
+    )
+
+    # When: the exact task is requested with notes explicitly enabled.
+    payload = parse_result(
+        tasks_list(
+            {"id": json_string(created["id"]), "include_notes": True},
+            _tasks_path=str(path),
+        )
+    )
+
+    # Then: exactly that full task is returned.
+    tasks = [json_object(task) for task in json_list(payload["tasks"])]
+    assert payload["total"] == 1
+    assert tasks == [created]
+
+
+def test_tasks_list_rejects_unbounded_limit(tmp_path: Path) -> None:
+    # Given: a temporary tasks file.
+    path = tmp_path / "tasks.json"
+
+    # When: the caller asks for more than the hard maximum.
+    payload = parse_result(tasks_list({"limit": 101}, _tasks_path=str(path)))
+
+    # Then: the handler refuses the unbounded request.
+    assert payload == {
+        "ok": False,
+        "error": {"code": "invalid_limit", "message": "limit must be an integer from 1 to 100"},
+    }
+
+
 def test_tasks_update_changes_title_and_status(tmp_path: Path) -> None:
     # Given: a task.
     path = tmp_path / "tasks.json"

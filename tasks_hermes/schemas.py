@@ -6,6 +6,7 @@ if TYPE_CHECKING:
     from .json_types import JsonObject
 
 STATUS_DESCRIPTION: Final[str] = "Task status: pending, in_progress, done, or all."
+LIST_LIMIT_DESCRIPTION: Final[str] = "Maximum tasks returned (default 20, max 100)."
 
 TASKS_CREATE: Final[JsonObject] = {
     "name": "tasks_create",
@@ -22,10 +23,35 @@ TASKS_CREATE: Final[JsonObject] = {
 
 TASKS_LIST: Final[JsonObject] = {
     "name": "tasks_list",
-    "description": "List persistent tasks, optionally filtered by status.",
+    "description": (
+        "List tasks as compact metadata by default. Supports bounded pagination, exact id, "
+        "and text search; notes are returned only when explicitly requested."
+    ),
     "parameters": {
         "type": "object",
-        "properties": {"status": {"type": "string", "description": STATUS_DESCRIPTION}},
+        "properties": {
+            "status": {"type": "string", "description": STATUS_DESCRIPTION},
+            "id": {"type": "string", "description": "Exact task id."},
+            "query": {
+                "type": "string",
+                "description": "Case-insensitive search across id, title, and note.",
+            },
+            "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100,
+                "description": LIST_LIMIT_DESCRIPTION,
+            },
+            "offset": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Tasks to skip after filtering (default 0).",
+            },
+            "include_notes": {
+                "type": "boolean",
+                "description": "Return full notes. Defaults to false; enable only deliberately.",
+            },
+        },
     },
 }
 
